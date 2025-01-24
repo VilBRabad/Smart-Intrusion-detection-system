@@ -2,6 +2,8 @@
 
 # Intrusion Detection System
 
+## IP webcam App for frames
+
 ## Overview
 This project is an Intrusion Detection System (IDS) developed using Python and OpenCV. It utilizes machine learning algorithms for facial recognition to detect intruders in a specified area. When an intruder is detected and moves out of the designated area, the system captures frames from when they entered and saves them on the local machine. Additionally, an SMS notification is sent to the owner to alert them of the intrusion.
 

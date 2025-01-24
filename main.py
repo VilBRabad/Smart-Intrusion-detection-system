@@ -6,7 +6,7 @@ import cv2
 import time
 import datetime
 from collections import deque
-from twilio.rest import Client 
+# from twilio.rest import Client 
 import random
 import heapq
 import requests
@@ -48,20 +48,55 @@ def is_person_present(frame, thresh=1100):
         return False, frame
 
 
-def send_message(body, info_dict):
+# def send_message(body, info_dict):
 
-    # Your Account SID from twilio.com/console
-    account_sid = info_dict['account_sid']
+#     # Your Account SID from twilio.com/console
+#     account_sid = info_dict['account_sid']
 
-    # Your Auth Token from twilio.com/console
-    auth_token  = info_dict['auth_token']
-
-
-    client = Client(account_sid, auth_token)
-
-    message = client.messages.create(to=info_dict['your_num'], from_=info_dict['trial_num'], body=body)
+#     # Your Auth Token from twilio.com/console
+#     auth_token  = info_dict['auth_token']
 
 
+#     client = Client(account_sid, auth_token)
+
+#     message = client.messages.create(to=info_dict['your_num'], from_=info_dict['trial_num'], body=body)
+
+haar_file=cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+path=r'C:\Users\Vilas Rabad\Desktop\Python\Smart-Intruder-Detection-System-main\Face_Data\Sairaj'
+width=130
+height=100  #saved image size = 130 x 100
+os.chdir(r'C:\Users\Vilas Rabad\Desktop\Python\Smart-Intruder-Detection-System-main')
+datasets = 'Face_Data'
+
+(images, labels, names, id) = ([], [], {}, 0)
+for (subdirs, dirs, files) in os.walk(datasets):
+    # from this for loop we are traversing through each directory which contains the subdirectory
+    # names of subdirectory is assigned with the current name 
+    
+    for subdir in dirs:
+        names[id] = subdir
+        subjectpath = os.path.join(datasets, subdir)
+        for filename in os.listdir(subjectpath):
+            path = os.path.join(subjectpath, filename)
+            # print("Joined Path:", path)  # Print the joined path
+            label = id
+            images.append(cv2.imread(path, 0))
+            labels.append(int(label))
+        id += 1
+
+
+width, height = 130, 100
+
+print('Line 25')
+# Create a Numpy array 
+(images, labels) = [numpy.array(lst) for lst in [images, labels]]
+
+
+
+model = cv2.face.LBPHFaceRecognizer_create()
+model.read("trained_face_recognizer.xml")
+
+face_cascade = cv2.CascadeClassifier(haar_file)
 
 
 
@@ -117,20 +152,20 @@ print('no error in functions')
 cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
 
 # This is a test video
-cap = cv2.VideoCapture('sample_video1.mp4')
+# cap = cv2.VideoCapture('sample_video1.mp4')
 
 # Read the video stream from the camera
-# cap = cv2.VideoCapture('http://192.168.43.1:8080/video')
+cap = cv2.VideoCapture('http://192.168.0.102:8080/video')
 
 # Get width and height of the frame
 width = int(cap.get(3))
 height = int(cap.get(4))
 
 # Read and store the credentials information in a dict
-with open('credential.txt', 'r') as myfile:
-  data = myfile.read()
+# with open('credential.txt', 'r') as myfile:
+#   data = myfile.read()
 
-info_dict = eval(data)
+# info_dict = eval(data)
 
 # Initialize the background Subtractor
 foog = cv2.createBackgroundSubtractorMOG2(detectShadows=True, varThreshold=100, history=2000)
@@ -168,12 +203,23 @@ recognisedName = ""
 sent  = False
 
 while True:
-    
     ret, frame = cap.read()
     if not ret:
         break 
     
-            
+    
+    # frame = cv2.rotate(frame, cv2.ROTATE_180)
+
+    # Ensure the rotated frame matches previous frame dimensions
+    if prevframe is not None:
+        frame = cv2.resize(frame, (prevframe.shape[1], prevframe.shape[0]))
+
+    # Convert to grayscale before passing to `calculate_percentage_change`
+    gray_frame1 = cv2.cvtColor(prevframe, cv2.COLOR_BGR2GRAY)
+    gray_frame2 = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+    # change_percentage = calculate_percentage_change(gray_frame1, gray_frame2)
+
     # This function will return a boolean variable telling if someone was present or not, it will also draw boxes if it 
     # finds someone
     detected, annotated_image = is_person_present(frame)  
@@ -225,7 +271,7 @@ while True:
                     if len(recognisedName) > 0: 
                         body = "Alert: {} Has entered in your Room at {} \n Left the room at {}".format(recognisedName,entry_time,exit_time)
                     print('message has been sent')
-                    send_message(body, info_dict)
+                    # send_message(body, info_dict)
                     frame_index = 0
                     cv2.destroyWindow("frame")
                     while frame_heap:
@@ -250,7 +296,7 @@ while True:
         if change_percentage > 95 and sent == False: 
             sent = True
             body = "Alert: \n Some one has changed the camera configuration at:{}".format(datetime.datetime.now().strftime("%A, %I-%M-%S %p %d %B %Y")) 
-            send_message(body,info_dict)
+            # send_message(body,info_dict)
     
         if change_initial_change > 60: 
             heapq.heappush(frame_heap, (-change_percentage, frame,datetime.datetime.now().strftime("%A, %I-%M-%S %p %d %B %Y")))
