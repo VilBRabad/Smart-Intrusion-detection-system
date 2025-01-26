@@ -6,10 +6,11 @@ import cv2
 import time
 import datetime
 from collections import deque
-# from twilio.rest import Client 
+from twilio.rest import Client 
 import random
 import heapq
 import requests
+import json
 
 
 
@@ -48,18 +49,19 @@ def is_person_present(frame, thresh=1100):
         return False, frame
 
 
-# def send_message(body, info_dict):
+def send_message(body, info_dict):
 
-#     # Your Account SID from twilio.com/console
-#     account_sid = info_dict['account_sid']
+    # Your Account SID from twilio.com/console
+    account_sid = info_dict['account_sid']
 
-#     # Your Auth Token from twilio.com/console
-#     auth_token  = info_dict['auth_token']
+    # Your Auth Token from twilio.com/console
+    auth_token  = info_dict['auth_token']
 
 
-#     client = Client(account_sid, auth_token)
+    client = Client(account_sid, auth_token)
 
-#     message = client.messages.create(to=info_dict['your_num'], from_=info_dict['trial_num'], body=body)
+    message = client.messages.create(to=info_dict['your_num'], from_=info_dict['trial_num'], body=body)
+
 
 haar_file=cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
 path=r'C:\Users\Vilas Rabad\Desktop\Python\Smart-Intruder-Detection-System-main\Face_Data\Sairaj'
@@ -152,10 +154,10 @@ print('no error in functions')
 cv2.namedWindow('frame', cv2.WINDOW_NORMAL)
 
 # This is a test video
-# cap = cv2.VideoCapture('sample_video1.mp4')
+cap = cv2.VideoCapture('sample_video1.mp4')
 
 # Read the video stream from the camera
-cap = cv2.VideoCapture('http://192.168.0.102:8080/video')
+# cap = cv2.VideoCapture('http://192.168.0.102:8080/video')
 
 # Get width and height of the frame
 width = int(cap.get(3))
@@ -163,9 +165,20 @@ height = int(cap.get(4))
 
 # Read and store the credentials information in a dict
 # with open('credential.txt', 'r') as myfile:
-#   data = myfile.read()
+#     print(myfile)
+#     data = myfile.read()
+
+# with open("credential.txt", "r", encoding="utf-8") as myfile:
+#     credentials = json.load(myfile)
 
 # info_dict = eval(data)
+info_dict = {
+    'account_sid': '',
+    'auth_token': '',
+    'your_num': '',
+    'trial_num': '' 
+}
+# print(info_dict)
 
 # Initialize the background Subtractor
 foog = cv2.createBackgroundSubtractorMOG2(detectShadows=True, varThreshold=100, history=2000)
@@ -271,7 +284,7 @@ while True:
                     if len(recognisedName) > 0: 
                         body = "Alert: {} Has entered in your Room at {} \n Left the room at {}".format(recognisedName,entry_time,exit_time)
                     print('message has been sent')
-                    # send_message(body, info_dict)
+                    send_message(body, info_dict)
                     frame_index = 0
                     cv2.destroyWindow("frame")
                     while frame_heap:
@@ -296,7 +309,7 @@ while True:
         if change_percentage > 95 and sent == False: 
             sent = True
             body = "Alert: \n Some one has changed the camera configuration at:{}".format(datetime.datetime.now().strftime("%A, %I-%M-%S %p %d %B %Y")) 
-            # send_message(body,info_dict)
+            send_message(body,info_dict)
     
         if change_initial_change > 60: 
             heapq.heappush(frame_heap, (-change_percentage, frame,datetime.datetime.now().strftime("%A, %I-%M-%S %p %d %B %Y")))
